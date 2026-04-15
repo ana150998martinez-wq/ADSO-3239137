@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prueba de desempeño - Modelado y construcción de base de datos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/css/styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="overlay"></div>
+    <nav class="topbar container">
+      <div class="brand">
+        <span class="brand-mark">BD</span>
+        <div>
+          <strong>Prueba de desempeño</strong>
+          <small>Modelado de datos y construcción física en MySQL</small>
+        </div>
+      </div>
+      <button class="nav-btn" id="scrollToGuide">Ver guía</button>
+    </nav>
+
+    <section class="hero-content container">
+      <div class="hero-copy">
+        <span class="eyebrow">Actividad aplicada para aprendices</span>
+        <h1>Construcción de MER, MR y modelo físico en MySQL</h1>
+        <p class="lead">
+          En esta prueba de desempeño, los <strong>aprendices</strong> deben analizar un dominio de negocio,
+          representar su estructura en un <strong>Modelo Entidad Relación (MER)</strong>, transformarlo a un
+          <strong>Modelo Relacional (MR)</strong> y finalmente construir el esquema físico en el motor de base de datos
+          <strong>MySQL</strong>. Se recomienda usar <strong>draw.io</strong> para los diagramas y el motor SQL para la implementación.
+        </p>
+        <div class="hero-actions">
+          <button class="primary-btn" id="scrollToDomains">Ver entidades</button>
+          <button class="secondary-btn" id="scrollToPhases">Ver fases</button>
+        </div>
+      </div>
+
+      <div class="hero-panel glass-card">
+        <h2>Entregables esperados</h2>
+        <ul>
+          <li>MER completo y legible</li>
+          <li>MR derivado del análisis</li>
+          <li>Script físico en MySQL</li>
+          <li>Relaciones, llaves y restricciones</li>
+          <li>Defensa técnica del diseño</li>
+        </ul>
+        <div class="badge-row">
+          <span class="badge">Draw.io</span>
+          <span class="badge">MySQL</span>
+          <span class="badge">Normalización</span>
+        </div>
+      </div>
+    </section>
+  </header>
+
+  <main>
+    <section class="section section-intro container" id="guide">
+      <div class="section-heading">
+        <span class="section-tag">Propósito</span>
+        <h2>¿Para qué sirve este ejercicio?</h2>
+      </div>
+      <div class="grid-two">
+        <article class="content-card">
+          <p>
+            Este ejercicio permite que el aprendiz demuestre su capacidad para <strong>interpretar un dominio de información</strong>,
+            identificar entidades, definir atributos, establecer relaciones y llevar el diseño conceptual a una representación
+            lógica y física. El objetivo no es solo dibujar tablas, sino comprender cómo una necesidad del negocio se traduce
+            en una estructura de base de datos consistente, escalable y verificable.
+          </p>
+          <p>
+            Durante el desarrollo, el aprendiz deberá justificar por qué cada entidad existe, cómo se conecta con las demás y
+            qué restricciones garantizan la integridad de los datos. Para facilitar la comprensión del ejercicio, los atributos
+            clave aparecen resaltados con otro color dentro de los párrafos, de manera que sea más sencillo distinguir la función
+            de cada componente antes de construir el diagrama y el script SQL.
+          </p>
+        </article>
+        <aside class="info-panel">
+          <h3>Ruta recomendada</h3>
+          <ol>
+            <li>Leer el dominio y separar las entidades.</li>
+            <li>Construir el MER en draw.io.</li>
+            <li>Transformar el MER a MR.</li>
+            <li>Definir llaves primarias y foráneas.</li>
+            <li>Implementar el modelo físico en MySQL.</li>
+            <li>Validar integridad y coherencia del diseño.</li>
+          </ol>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section section-soft" id="phases">
+      <div class="container">
+        <div class="section-heading centered">
+          <span class="section-tag">Fases de trabajo</span>
+          <h2>Secuencia esperada para la prueba</h2>
+        </div>
+        <div class="timeline">
+          <article class="timeline-item">
+            <span class="timeline-step">1</span>
+            <h3>Análisis del dominio</h3>
+            <p>
+              Revise los grupos de entidades y determine qué información administra cada una. En esta etapa debe comprender qué
+              datos describen la ubicación geográfica, qué datos soportan la parte comercial y qué datos controlan el acceso al sistema.
+            </p>
+          </article>
+          <article class="timeline-item">
+            <span class="timeline-step">2</span>
+            <h3>Construcción del MER</h3>
+            <p>
+              Modele las entidades, sus atributos y sus relaciones. Se recomienda usar <strong>draw.io</strong> por claridad visual,
+              facilidad de edición y posibilidad de exportar evidencia para revisión del instructor.
+            </p>
+          </article>
+          <article class="timeline-item">
+            <span class="timeline-step">3</span>
+            <h3>Transformación a MR</h3>
+            <p>
+              Lleve el modelo conceptual a tablas relacionales. Aquí debe definir cardinalidades resueltas, llaves primarias,
+              llaves foráneas y normalización básica para evitar redundancia y ambigüedad.
+            </p>
+          </article>
+          <article class="timeline-item">
+            <span class="timeline-step">4</span>
+            <h3>Implementación física en MySQL</h3>
+            <p>
+              Construya el script SQL con sus tipos de datos, restricciones, relaciones y estructura final. El resultado debe ser
+              ejecutable y coherente con el MR previamente definido.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section container" id="domains">
+      <div class="section-heading">
+        <span class="section-tag">Dominios del ejercicio</span>
+        <h2>Entidades a modelar</h2>
+        <p class="section-text">
+          El ejercicio se divide en tres bloques para facilitar el análisis: <strong>ubicación</strong>, <strong>comercial</strong>
+          y <strong>seguridad/acceso</strong>. Cada bloque tiene una finalidad específica dentro del sistema.
+        </p>
+      </div>
+
+      <div class="domain-grid">
+        <article class="domain-card">
+          <div class="domain-icon">🌍</div>
+          <h3>Dominio de ubicación</h3>
+          <p>
+            Este grupo organiza la jerarquía geográfica del sistema. La entidad <span class="attr">continente</span> sirve para
+            agrupar grandes regiones; <span class="attr">pais</span> permite representar cada nación; <span class="attr">departamento</span>
+            descompone la organización territorial; <span class="attr">ciudad</span> ubica los centros urbanos; y <span class="attr">barrio</span>
+            precisa el nivel local. Este conjunto es útil para construir direcciones consistentes, segmentar información y mantener
+            una estructura territorial clara dentro de la base de datos.
+          </p>
+        </article>
+
+        <article class="domain-card">
+          <div class="domain-icon">🛒</div>
+          <h3>Dominio comercial</h3>
+          <p>
+            La entidad <span class="attr">categoria</span> clasifica los productos según su tipo o familia. La entidad
+            <span class="attr">producto</span> almacena la información principal de los artículos disponibles. La entidad
+            <span class="attr">factura</span> representa la transacción comercial realizada, mientras que
+            <span class="attr">detalle_factura</span> desglosa cada producto vendido dentro de una factura. Este bloque permite
+            estructurar inventario, venta y trazabilidad de operaciones comerciales de forma ordenada.
+          </p>
+        </article>
+
+        <article class="domain-card">
+          <div class="domain-icon">🔐</div>
+          <h3>Dominio de seguridad y acceso</h3>
+          <p>
+            La entidad <span class="attr">persona</span> concentra los datos básicos del individuo. La entidad <span class="attr">usuario</span>
+            registra la cuenta con la que se ingresa al sistema. La entidad <span class="attr">roles</span> define permisos o perfiles
+            de acceso. Este grupo permite separar identidad, autenticación y autorización, lo cual mejora la organización del modelo
+            y facilita la administración del acceso dentro del sistema.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section-soft">
+      <div class="container">
+        <div class="section-heading centered">
+          <span class="section-tag">Orientación técnica</span>
+          <h2>Sugerencias para la construcción del modelo</h2>
+        </div>
+        <div class="tips-grid">
+          <article class="tip-card">
+            <h3>MER</h3>
+            <p>
+              Identifique entidades, atributos, relaciones y cardinalidades. Evite iniciar directamente por el SQL; primero debe
+              quedar clara la lógica del negocio en el diagrama conceptual.
+            </p>
+          </article>
+          <article class="tip-card">
+            <h3>MR</h3>
+            <p>
+              Convierta cada entidad en tabla, determine las llaves primarias y resuelva relaciones de uno a muchos o muchos a muchos
+              según corresponda. Asegure coherencia entre nombre de tabla y propósito funcional.
+            </p>
+          </article>
+          <article class="tip-card">
+            <h3>Modelo físico</h3>
+            <p>
+              En MySQL defina tipos de datos apropiados, restricciones NOT NULL, PRIMARY KEY, FOREIGN KEY y longitudes acordes al dato.
+              La estructura final debe reflejar fielmente el modelo relacional previamente diseñado.
+            </p>
+          </article>
+          <article class="tip-card">
+            <h3>Evidencia esperada</h3>
+            <p>
+              Entregue el diagrama MER, el MR y el script SQL funcional. El instructor podrá revisar consistencia, integridad,
+              organización y correspondencia entre los tres niveles del modelado.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section container">
+      <div class="section-heading">
+        <span class="section-tag">Pendientes institucionales</span>
+        <h2>Datos que no están en las entradas</h2>
+      </div>
+      <div class="pending-card">
+        <p><strong>Pendiente:</strong> competencia oficial.</p>
+        <p><strong>Pendiente:</strong> RAP asociado a la prueba.</p>
+        <p><strong>Pendiente:</strong> criterios de evaluación oficiales.</p>
+        <p><strong>Pendiente:</strong> instrumento de evaluación oficial (lista de chequeo o rúbrica).</p>
+        <p>
+          El landing deja lista la actividad de aprendizaje y la orientación técnica, pero estos elementos institucionales deben ser
+          completados por el instructor con base en la guía de aprendizaje o el formato institucional que corresponda.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-content">
+      <div>
+        <strong>Prueba de desempeño</strong>
+        <p>MER, MR y construcción física en MySQL para aprendices.</p>
+      </div>
+      <button class="nav-btn" id="scrollToTop">Volver arriba</button>
+    </div>
+  </footer>
+
+  <script src="src/js/app.js"></script>
+</body>
+</html>
