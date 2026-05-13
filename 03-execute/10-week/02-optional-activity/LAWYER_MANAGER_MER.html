@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAWYER MANAGER — Modelo Entidad Relación</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f0f4f8; font-family: Arial, sans-serif; }
+
+  .page-header {
+    background: linear-gradient(135deg, #1E3A6E 0%, #2C5282 50%, #1A2B5E 100%);
+    color: white; padding: 28px 40px; display: flex;
+    align-items: center; justify-content: space-between;
+    box-shadow: 0 4px 20px rgba(30,58,110,0.4);
+  }
+  .page-header h1 { font-size: 26px; font-weight: 700; letter-spacing: 1px; }
+  .page-header p  { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+  .badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .badge {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px; padding: 3px 12px; font-size: 11px; color: #fff;
+  }
+
+  .legend-bar {
+    background: #fff; border-bottom: 1px solid #dde3ef;
+    padding: 12px 40px; display: flex; gap: 24px; flex-wrap: wrap;
+    align-items: center;
+  }
+  .legend-bar span { font-size: 12px; color: #444; font-weight: 600; }
+  .leg { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #555; }
+  .leg-box { width: 14px; height: 14px; border-radius: 3px; }
+
+  .canvas-wrap {
+    overflow: auto; padding: 30px; min-height: calc(100vh - 140px);
+  }
+
+  svg text { font-family: Arial, sans-serif; }
+
+  /* Controls */
+  .controls {
+    position: fixed; bottom: 20px; right: 20px;
+    display: flex; gap: 8px; z-index: 100;
+  }
+  .ctrl-btn {
+    background: #1E3A6E; color: #fff; border: none;
+    width: 38px; height: 38px; border-radius: 8px; font-size: 18px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    transition: background 0.2s;
+  }
+  .ctrl-btn:hover { background: #2C5282; }
+  .ctrl-btn.reset { font-size: 13px; width: auto; padding: 0 14px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <h1>⚖ LAWYER MANAGER — Modelo Entidad Relación (MER)</h1>
+    <p>Sistema jurídico multi-tenant · Ingeniería inversa · Diseño de base de datos</p>
+    <div class="badges">
+      <span class="badge">24 Entidades</span>
+      <span class="badge">29 Relaciones</span>
+      <span class="badge">3 Tablas puente N:M</span>
+      <span class="badge">9 Módulos</span>
+      <span class="badge">3FN Normalizado</span>
+    </div>
+  </div>
+  <div style="text-align:right; font-size:12px; opacity:0.7;">
+    <div>🔑 PK = Clave Primaria</div>
+    <div>🔗 FK = Clave Foránea</div>
+    <div style="margin-top:4px;">Usa scroll + botones para navegar</div>
+  </div>
+</div>
+
+<div class="legend-bar">
+  <span>Módulos:</span>
+  <div class="leg"><div class="leg-box" style="background:#7B68EE;"></div> Autenticación</div>
+  <div class="leg"><div class="leg-box" style="background:#2E8B57;"></div> Clientes</div>
+  <div class="leg"><div class="leg-box" style="background:#2B6CB0;"></div> Procesos jurídicos</div>
+  <div class="leg"><div class="leg-box" style="background:#B7791F;"></div> Tareas</div>
+  <div class="leg"><div class="leg-box" style="background:#C53030;"></div> Conflictos / Alertas</div>
+  <div class="leg"><div class="leg-box" style="background:#6B3FA0;"></div> Notificaciones</div>
+  <div class="leg"><div class="leg-box" style="background:#276749;"></div> Docs / Eventos / Auditoría</div>
+  <div class="leg"><div class="leg-box" style="background:#2D3748;"></div> Catálogos</div>
+</div>
+
+<div class="canvas-wrap" id="canvasWrap">
+<svg id="mer-svg" xmlns="http://www.w3.org/2000/svg"
+     width="3400" height="2900"
+     style="display:block; min-width:3400px;">
+
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M1 1L9 5L1 9" fill="none" stroke="#94A3B8" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <marker id="arr-nm" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M1 1L9 5L1 9" fill="none" stroke="#D97706" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+    <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="rgba(0,0,0,0.12)"/>
+  </filter>
+</defs>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     BACKGROUND MÓDULO ZONES
+════════════════════════════════════════════════════════════════════════ -->
+<!-- Auth zone -->
+<rect x="30" y="30" width="3340" height="640" rx="16"
+      fill="#EEF2FF" stroke="#7B68EE" stroke-width="1" stroke-dasharray="6 3" opacity="0.6"/>
+<text x="50" y="60" font-size="13" font-weight="700" fill="#5B21B6" opacity="0.7">MÓDULO: AUTENTICACIÓN Y SEGURIDAD</text>
+
+<!-- Clientes zone -->
+<rect x="30" y="700" width="1600" height="620" rx="16"
+      fill="#ECFDF5" stroke="#2E8B57" stroke-width="1" stroke-dasharray="6 3" opacity="0.6"/>
+<text x="50" y="730" font-size="13" font-weight="700" fill="#065F46" opacity="0.7">MÓDULO: CLIENTES</text>
+
+<!-- Procesos zone -->
+<rect x="1660" y="700" width="1710" height="620" rx="16"
+      fill="#EBF4FF" stroke="#2B6CB0" stroke-width="1" stroke-dasharray="6 3" opacity="0.6"/>
+<text x="1680" y="730" font-size="13" font-weight="700" fill="#1E3A6E" opacity="0.7">MÓDULO: PROCESOS JURÍDICOS</text>
+
+<!-- Tareas zone -->
+<rect x="30" y="1350" width="2500" height="680" rx="16"
+      fill="#FFFBEB" stroke="#B7791F" stroke-width="1" stroke-dasharray="6 3" opacity="0.6"/>
+<text x="50" y="1380" font-size="13" font-weight="700" fill="#92400E" opacity="0.7">MÓDULO: TAREAS Y ASIGNACIONES</text>
+
+<!-- Términos zone -->
+<rect x="2560" y="1350" width="810" height="680" rx="16"
+      fill="#EBF4FF" stroke="#2B6CB0" stroke-width="1" stroke-dasharray="6 3" opacity="0.6"/>
+<text x="2580" y="1380" font-size="13" font-weight="700" fill="#1E3A6E" opacity="0.7">TÉRMINOS</text>
+
+<!-- Conflictos zone -->
+<rect x="30" y="2060" width="2100" height="660" rx="16"
+      fill="#FFF5F5" stroke="#C53030" stroke-width="1" stroke-dasharray="6 3" opacity="0.6"/>
+<text x="50" y="2090" font-size="13" font-weight="700" fill="#9B2C2C" opacity="0.7">MÓDULO: CONFLICTOS DE INTERÉS Y ALERTAS</text>
+
+<!-- Notificaciones zone -->
+<rect x="2160" y="2060" width="620" height="660" rx="16"
+      fill="#F5F3FF" stroke="#6B3FA0" stroke-width="1" stroke-dasharray="6 3" opacity="0.6"/>
+<text x="2180" y="2090" font-size="13" font-weight="700" fill="#4C1D95" opacity="0.7">NOTIFICACIONES</text>
+
+<!-- Docs/Audit zone -->
+<rect x="2810" y="2060" width="560" height="660" rx="16"
+      fill="#ECFDF5" stroke="#276749" stroke-width="1" stroke-dasharray="6 3" opacity="0.6"/>
+<text x="2830" y="2090" font-size="13" font-weight="700" fill="#065F46" opacity="0.7">DOCS / AUDITORÍA</text>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     JAVASCRIPT-DRIVEN ENTITIES
+════════════════════════════════════════════════════════════════════════ -->
+<g id="entities-layer"></g>
+<g id="relations-layer"></g>
+
+</svg>
+</div>
+
+<!-- Zoom controls -->
+<div class="controls">
+  <button class="ctrl-btn" onclick="zoom(0.15)">+</button>
+  <button class="ctrl-btn" onclick="zoom(-0.15)">−</button>
+  <button class="ctrl-btn reset" onclick="resetZoom()">Reset</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+// ENTITY DEFINITIONS
+// Each entity: { id, x, y, w, color, headerBg, fields:[{name,type,pk,fk}] }
+// ══════════════════════════════════════════════════════════════════════════
+
+const COLORS = {
+  auth:   { hdr: '#5B21B6', hdrLight: '#7B68EE', row1: '#EEF2FF', row2: '#E0E7FF' },
+  client: { hdr: '#065F46', hdrLight: '#2E8B57', row1: '#ECFDF5', row2: '#D1FAE5' },
+  cases:  { hdr: '#1E3A6E', hdrLight: '#2B6CB0', row1: '#EBF4FF', row2: '#DBEAFE' },
+  tasks:  { hdr: '#78350F', hdrLight: '#B7791F', row1: '#FFFBEB', row2: '#FEF3C7' },
+  terms:  { hdr: '#1E3A6E', hdrLight: '#2B6CB0', row1: '#EBF4FF', row2: '#DBEAFE' },
+  confl:  { hdr: '#9B2C2C', hdrLight: '#C53030', row1: '#FFF5F5', row2: '#FED7D7' },
+  notif:  { hdr: '#4C1D95', hdrLight: '#6B3FA0', row1: '#F5F3FF', row2: '#EDE9FE' },
+  audit:  { hdr: '#065F46', hdrLight: '#276749', row1: '#ECFDF5', row2: '#D1FAE5' },
+  cat:    { hdr: '#2D3748', hdrLight: '#4A5568', row1: '#F7FAFC', row2: '#EDF2F7' },
+};
+
+const ROW_H = 22;
+const HDR_H = 36;
+const PAD_X = 12;
+const FONT = 'Arial, sans-serif';
+
+const entities = [
+
+  // ── AUTENTICACIÓN ────────────────────────────────────────────────────────
+  {
+    id: 'TENANTS', x: 1350, y: 70, w: 310, color: 'auth',
+    fields: [
+      {name:'tenant_id',    type:'UUID',         pk:true,  fk:false},
+      {name:'nombre',       type:'VARCHAR(150)', pk:false, fk:false},
+      {name:'dominio',      type:'VARCHAR(100)', pk:false, fk:false},
+      {name:'plan',         type:'VARCHAR(50)',  pk:false, fk:false},
+      {name:'config_json',  type:'JSON',         pk:false, fk:false},
+      {name:'activo',       type:'BOOLEAN',      pk:false, fk:false},
+      {name:'created_at',   type:'TIMESTAMP',    pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'USERS', x: 60, y: 70, w: 310, color: 'auth',
+    fields: [
+      {name:'user_id',       type:'UUID',         pk:true,  fk:false},
+      {name:'tenant_id',     type:'UUID',         pk:false, fk:true},
+      {name:'role_id',       type:'UUID',         pk:false, fk:true},
+      {name:'nombre',        type:'VARCHAR(150)', pk:false, fk:false},
+      {name:'email',         type:'VARCHAR(200)', pk:false, fk:false},
+      {name:'password_hash', type:'VARCHAR(255)', pk:false, fk:false},
+      {name:'activo',        type:'BOOLEAN',      pk:false, fk:false},
+      {name:'ultimo_acceso', type:'TIMESTAMP',    pk:false, fk:false},
+      {name:'created_at',    type:'TIMESTAMP',    pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'ROLES', x: 420, y: 70, w: 300, color: 'auth',
+    fields: [
+      {name:'role_id',    type:'UUID',         pk:true,  fk:false},
+      {name:'tenant_id',  type:'UUID',         pk:false, fk:true},
+      {name:'nombre',     type:'VARCHAR(100)', pk:false, fk:false},
+      {name:'descripcion',type:'TEXT',         pk:false, fk:false},
+      {name:'activo',     type:'BOOLEAN',      pk:false, fk:false},
+      {name:'created_at', type:'TIMESTAMP',    pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'PERMISSIONS', x: 770, y: 70, w: 300, color: 'auth',
+    fields: [
+      {name:'permission_id', type:'UUID',        pk:true,  fk:false},
+      {name:'modulo',        type:'VARCHAR(80)', pk:false, fk:false},
+      {name:'accion',        type:'VARCHAR(80)', pk:false, fk:false},
+      {name:'descripcion',   type:'TEXT',        pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'ROLE_PERMISSIONS', x: 1120, y: 70, w: 200, color: 'auth',
+    bridge: true,
+    fields: [
+      {name:'role_id',       type:'UUID',      pk:false, fk:true},
+      {name:'permission_id', type:'UUID',      pk:false, fk:true},
+      {name:'granted_at',    type:'TIMESTAMP', pk:false, fk:false},
+      {name:'granted_by',    type:'UUID',      pk:false, fk:true},
+    ]
+  },
+  {
+    id: 'COURTS', x: 2780, y: 70, w: 280, color: 'cases',
+    fields: [
+      {name:'court_id',    type:'UUID',         pk:true,  fk:false},
+      {name:'tenant_id',   type:'UUID',         pk:false, fk:true},
+      {name:'nombre',      type:'VARCHAR(200)', pk:false, fk:false},
+      {name:'ciudad',      type:'VARCHAR(100)', pk:false, fk:false},
+      {name:'departamento',type:'VARCHAR(100)', pk:false, fk:false},
+      {name:'tipo',        type:'VARCHAR(100)', pk:false, fk:false},
+      {name:'activo',      type:'BOOLEAN',      pk:false, fk:false},
+    ]
+  },
+
+  // ── CLIENTES ─────────────────────────────────────────────────────────────
+  {
+    id: 'CLIENT_TYPES', x: 60, y: 750, w: 260, color: 'cat',
+    fields: [
+      {name:'client_type_id', type:'UUID',         pk:true,  fk:false},
+      {name:'nombre',         type:'VARCHAR(100)', pk:false, fk:false},
+      {name:'descripcion',    type:'TEXT',         pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'CLIENTS', x: 370, y: 750, w: 340, color: 'client',
+    fields: [
+      {name:'client_id',      type:'UUID',         pk:true,  fk:false},
+      {name:'tenant_id',      type:'UUID',         pk:false, fk:true},
+      {name:'client_type_id', type:'UUID',         pk:false, fk:true},
+      {name:'created_by',     type:'UUID',         pk:false, fk:true},
+      {name:'nombre',         type:'VARCHAR(200)', pk:false, fk:false},
+      {name:'identificacion', type:'VARCHAR(50)',  pk:false, fk:false},
+      {name:'email',          type:'VARCHAR(200)', pk:false, fk:false},
+      {name:'telefono',       type:'VARCHAR(30)',  pk:false, fk:false},
+      {name:'direccion',      type:'TEXT',         pk:false, fk:false},
+      {name:'activo',         type:'BOOLEAN',      pk:false, fk:false},
+      {name:'created_at',     type:'TIMESTAMP',    pk:false, fk:false},
+    ]
+  },
+
+  // ── PROCESOS JURÍDICOS ────────────────────────────────────────────────────
+  {
+    id: 'PROCESS_TYPES', x: 1700, y: 750, w: 260, color: 'cat',
+    fields: [
+      {name:'process_type_id', type:'UUID',         pk:true,  fk:false},
+      {name:'nombre',          type:'VARCHAR(150)', pk:false, fk:false},
+      {name:'descripcion',     type:'TEXT',         pk:false, fk:false},
+      {name:'jurisdiccion',    type:'VARCHAR(100)', pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'CASE_STATUSES', x: 2010, y: 750, w: 270, color: 'cat',
+    fields: [
+      {name:'case_status_id', type:'UUID',        pk:true,  fk:false},
+      {name:'nombre',         type:'VARCHAR(80)', pk:false, fk:false},
+      {name:'color',          type:'VARCHAR(7)',  pk:false, fk:false},
+      {name:'es_final',       type:'BOOLEAN',     pk:false, fk:false},
+      {name:'descripcion',    type:'TEXT',        pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'LEGAL_CASES', x: 2320, y: 750, w: 370, color: 'cases',
+    fields: [
+      {name:'case_id',          type:'UUID',          pk:true,  fk:false},
+      {name:'tenant_id',        type:'UUID',          pk:false, fk:true},
+      {name:'client_id',        type:'UUID',          pk:false, fk:true},
+      {name:'process_type_id',  type:'UUID',          pk:false, fk:true},
+      {name:'case_status_id',   type:'UUID',          pk:false, fk:true},
+      {name:'court_id',         type:'UUID',          pk:false, fk:true},
+      {name:'abogado_id',       type:'UUID',          pk:false, fk:true},
+      {name:'numero_radicado',  type:'VARCHAR(100)',  pk:false, fk:false},
+      {name:'nombre_caso',      type:'VARCHAR(300)',  pk:false, fk:false},
+      {name:'fecha_inicio',     type:'DATE',          pk:false, fk:false},
+      {name:'fecha_vencimiento',type:'DATE',          pk:false, fk:false},
+      {name:'descripcion',      type:'TEXT',          pk:false, fk:false},
+      {name:'created_at',       type:'TIMESTAMP',     pk:false, fk:false},
+    ]
+  },
+
+  // ── TAREAS ────────────────────────────────────────────────────────────────
+  {
+    id: 'TASK_TYPES', x: 60, y: 1400, w: 260, color: 'cat',
+    fields: [
+      {name:'task_type_id', type:'UUID',         pk:true,  fk:false},
+      {name:'nombre',       type:'VARCHAR(100)', pk:false, fk:false},
+      {name:'descripcion',  type:'TEXT',         pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'TASK_STATUSES', x: 370, y: 1400, w: 270, color: 'cat',
+    fields: [
+      {name:'task_status_id', type:'UUID',        pk:true,  fk:false},
+      {name:'nombre',         type:'VARCHAR(80)', pk:false, fk:false},
+      {name:'color',          type:'VARCHAR(7)',  pk:false, fk:false},
+      {name:'es_final',       type:'BOOLEAN',     pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'TASKS', x: 690, y: 1400, w: 330, color: 'tasks',
+    fields: [
+      {name:'task_id',        type:'UUID',         pk:true,  fk:false},
+      {name:'tenant_id',      type:'UUID',         pk:false, fk:true},
+      {name:'case_id',        type:'UUID',         pk:false, fk:true},
+      {name:'task_type_id',   type:'UUID',         pk:false, fk:true},
+      {name:'task_status_id', type:'UUID',         pk:false, fk:true},
+      {name:'created_by',     type:'UUID',         pk:false, fk:true},
+      {name:'titulo',         type:'VARCHAR(300)', pk:false, fk:false},
+      {name:'descripcion',    type:'TEXT',         pk:false, fk:false},
+      {name:'fecha_limite',   type:'DATE',         pk:false, fk:false},
+      {name:'prioridad',      type:'INT',          pk:false, fk:false},
+      {name:'created_at',     type:'TIMESTAMP',    pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'TASK_ASSIGNMENTS', x: 1070, y: 1400, w: 230, color: 'tasks',
+    bridge: true,
+    fields: [
+      {name:'task_id',      type:'UUID',      pk:false, fk:true},
+      {name:'user_id',      type:'UUID',      pk:false, fk:true},
+      {name:'assigned_at',  type:'TIMESTAMP', pk:false, fk:false},
+      {name:'assigned_by',  type:'UUID',      pk:false, fk:true},
+      {name:'completed_at', type:'TIMESTAMP', pk:false, fk:false},
+      {name:'notas',        type:'TEXT',      pk:false, fk:false},
+    ]
+  },
+
+  // ── TÉRMINOS ──────────────────────────────────────────────────────────────
+  {
+    id: 'TERMS', x: 2600, y: 1400, w: 330, color: 'terms',
+    fields: [
+      {name:'term_id',          type:'UUID',         pk:true,  fk:false},
+      {name:'tenant_id',        type:'UUID',         pk:false, fk:true},
+      {name:'case_id',          type:'UUID',         pk:false, fk:true},
+      {name:'created_by',       type:'UUID',         pk:false, fk:true},
+      {name:'titulo',           type:'VARCHAR(300)', pk:false, fk:false},
+      {name:'descripcion',      type:'TEXT',         pk:false, fk:false},
+      {name:'fecha_inicio',     type:'DATE',         pk:false, fk:false},
+      {name:'fecha_vencimiento',type:'DATE',         pk:false, fk:false},
+      {name:'dias_alerta',      type:'INT',          pk:false, fk:false},
+      {name:'completado',       type:'BOOLEAN',      pk:false, fk:false},
+      {name:'created_at',       type:'TIMESTAMP',    pk:false, fk:false},
+    ]
+  },
+
+  // ── CONFLICTOS Y ALERTAS ─────────────────────────────────────────────────
+  {
+    id: 'CONFLICT_STATUSES', x: 60, y: 2110, w: 260, color: 'cat',
+    fields: [
+      {name:'conflict_status_id', type:'UUID',        pk:true,  fk:false},
+      {name:'nombre',             type:'VARCHAR(80)', pk:false, fk:false},
+      {name:'descripcion',        type:'TEXT',        pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'ALERTS', x: 380, y: 2110, w: 330, color: 'confl',
+    fields: [
+      {name:'alert_id',    type:'UUID',        pk:true,  fk:false},
+      {name:'tenant_id',   type:'UUID',        pk:false, fk:true},
+      {name:'user_id',     type:'UUID',        pk:false, fk:true},
+      {name:'term_id',     type:'UUID',        pk:false, fk:true},
+      {name:'case_id',     type:'UUID',        pk:false, fk:true},
+      {name:'tipo',        type:'VARCHAR(80)', pk:false, fk:false},
+      {name:'mensaje',     type:'TEXT',        pk:false, fk:false},
+      {name:'leida',       type:'BOOLEAN',     pk:false, fk:false},
+      {name:'fecha_alerta',type:'TIMESTAMP',   pk:false, fk:false},
+      {name:'created_at',  type:'TIMESTAMP',   pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'CONFLICT_REVIEWS', x: 760, y: 2110, w: 350, color: 'confl',
+    fields: [
+      {name:'conflict_id',        type:'UUID',      pk:true,  fk:false},
+      {name:'tenant_id',          type:'UUID',      pk:false, fk:true},
+      {name:'case_id',            type:'UUID',      pk:false, fk:true},
+      {name:'client_id',          type:'UUID',      pk:false, fk:true},
+      {name:'reviewed_by',        type:'UUID',      pk:false, fk:true},
+      {name:'conflict_status_id', type:'UUID',      pk:false, fk:true},
+      {name:'descripcion',        type:'TEXT',      pk:false, fk:false},
+      {name:'resolucion',         type:'TEXT',      pk:false, fk:false},
+      {name:'fecha_revision',     type:'TIMESTAMP', pk:false, fk:false},
+      {name:'created_at',         type:'TIMESTAMP', pk:false, fk:false},
+    ]
+  },
+
+  // ── NOTIFICACIONES ───────────────────────────────────────────────────────
+  {
+    id: 'NOTIFICATIONS', x: 2190, y: 2110, w: 340, color: 'notif',
+    fields: [
+      {name:'notification_id', type:'UUID',         pk:true,  fk:false},
+      {name:'tenant_id',       type:'UUID',         pk:false, fk:true},
+      {name:'user_id',         type:'UUID',         pk:false, fk:true},
+      {name:'tipo',            type:'VARCHAR(80)',  pk:false, fk:false},
+      {name:'titulo',          type:'VARCHAR(300)', pk:false, fk:false},
+      {name:'mensaje',         type:'TEXT',         pk:false, fk:false},
+      {name:'leida',           type:'BOOLEAN',      pk:false, fk:false},
+      {name:'created_at',      type:'TIMESTAMP',    pk:false, fk:false},
+    ]
+  },
+
+  // ── DOCS / EVENTOS / AUDITORÍA ────────────────────────────────────────────
+  {
+    id: 'FILE_ATTACHMENTS', x: 1180, y: 2110, w: 310, color: 'audit',
+    fields: [
+      {name:'file_id',       type:'UUID',         pk:true,  fk:false},
+      {name:'tenant_id',     type:'UUID',         pk:false, fk:true},
+      {name:'uploaded_by',   type:'UUID',         pk:false, fk:true},
+      {name:'nombre_archivo',type:'VARCHAR(300)', pk:false, fk:false},
+      {name:'mime_type',     type:'VARCHAR(100)', pk:false, fk:false},
+      {name:'tamano_bytes',  type:'BIGINT',       pk:false, fk:false},
+      {name:'storage_path',  type:'VARCHAR(500)', pk:false, fk:false},
+      {name:'checksum',      type:'VARCHAR(64)',  pk:false, fk:false},
+      {name:'created_at',    type:'TIMESTAMP',    pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'CASE_DOCUMENTS', x: 2840, y: 2110, w: 240, color: 'audit',
+    bridge: true,
+    fields: [
+      {name:'case_id',     type:'UUID',         pk:false, fk:true},
+      {name:'file_id',     type:'UUID',         pk:false, fk:true},
+      {name:'descripcion', type:'VARCHAR(300)', pk:false, fk:false},
+      {name:'linked_at',   type:'TIMESTAMP',    pk:false, fk:false},
+      {name:'linked_by',   type:'UUID',         pk:false, fk:true},
+    ]
+  },
+  {
+    id: 'CASE_EVENTS', x: 1400, y: 2110, w: 330, color: 'audit',
+    fields: [
+      {name:'event_id',     type:'UUID',         pk:true,  fk:false},
+      {name:'tenant_id',    type:'UUID',         pk:false, fk:true},
+      {name:'case_id',      type:'UUID',         pk:false, fk:true},
+      {name:'user_id',      type:'UUID',         pk:false, fk:true},
+      {name:'tipo_evento',  type:'VARCHAR(100)', pk:false, fk:false},
+      {name:'descripcion',  type:'TEXT',         pk:false, fk:false},
+      {name:'fecha_evento', type:'TIMESTAMP',    pk:false, fk:false},
+      {name:'created_at',   type:'TIMESTAMP',    pk:false, fk:false},
+    ]
+  },
+  {
+    id: 'AUDIT_LOGS', x: 2840, y: 2480, w: 280, color: 'audit',
+    fields: [
+      {name:'log_id',           type:'UUID',        pk:true,  fk:false},
+      {name:'tenant_id',        type:'UUID',        pk:false, fk:true},
+      {name:'user_id',          type:'UUID',        pk:false, fk:true},
+      {name:'entidad',          type:'VARCHAR(100)',pk:false, fk:false},
+      {name:'entidad_id',       type:'UUID',        pk:false, fk:false},
+      {name:'accion',           type:'VARCHAR(20)', pk:false, fk:false},
+      {name:'datos_anteriores', type:'JSON',        pk:false, fk:false},
+      {name:'datos_nuevos',     type:'JSON',        pk:false, fk:false},
+      {name:'ip_address',       type:'VARCHAR(45)', pk:false, fk:false},
+      {name:'created_at',       type:'TIMESTAMP',   pk:false, fk:false},
+    ]
+  },
+
+];
+
+// ══════════════════════════════════════════════════════════════════════════
+// RELATIONS: [from, fromSide, to, toSide, type, label]
+// sides: 'top'|'bottom'|'left'|'right'
+// type: '1n' | 'nm'
+// ══════════════════════════════════════════════════════════════════════════
+const relations = [
+  // TENANTS → todos
+  ['TENANTS','bottom','USERS','top','1n','aloja'],
+  ['TENANTS','bottom','ROLES','top','1n','define'],
+  ['TENANTS','bottom','CLIENTS','top','1n','gestiona'],
+  ['TENANTS','bottom','LEGAL_CASES','top','1n','contiene'],
+  ['TENANTS','bottom','COURTS','bottom','1n','registra'],
+  ['TENANTS','bottom','AUDIT_LOGS','top','1n','audita'],
+  // AUTH
+  ['ROLES','bottom','USERS','top','1n','asigna'],
+  ['ROLES','right','ROLE_PERMISSIONS','left','nm','tiene'],
+  ['PERMISSIONS','right','ROLE_PERMISSIONS','left','nm','otorga'],
+  // CLIENTS
+  ['CLIENT_TYPES','right','CLIENTS','left','1n','clasifica'],
+  ['CLIENTS','right','LEGAL_CASES','left','1n','protagoniza'],
+  // CASES
+  ['PROCESS_TYPES','right','LEGAL_CASES','left','1n','tipifica'],
+  ['CASE_STATUSES','right','LEGAL_CASES','left','1n','define estado'],
+  ['COURTS','bottom','LEGAL_CASES','top','1n','atiende'],
+  ['USERS','bottom','LEGAL_CASES','top','1n','lleva'],
+  // TASKS
+  ['LEGAL_CASES','bottom','TASKS','top','1n','genera tareas'],
+  ['TASK_TYPES','right','TASKS','left','1n','tipifica'],
+  ['TASK_STATUSES','right','TASKS','left','1n','define estado'],
+  ['TASKS','right','TASK_ASSIGNMENTS','left','nm','asigna'],
+  ['USERS','bottom','TASK_ASSIGNMENTS','top','1n','recibe tarea'],
+  // TERMS
+  ['LEGAL_CASES','right','TERMS','left','1n','tiene términos'],
+  ['TERMS','bottom','ALERTS','top','1n','dispara alerta'],
+  // ALERTS
+  ['USERS','bottom','ALERTS','top','1n','recibe alerta'],
+  ['LEGAL_CASES','bottom','ALERTS','top','1n','genera alerta'],
+  // CONFLICTS
+  ['LEGAL_CASES','bottom','CONFLICT_REVIEWS','top','1n','verifica'],
+  ['CLIENTS','bottom','CONFLICT_REVIEWS','top','1n','involucra'],
+  ['CONFLICT_STATUSES','right','CONFLICT_REVIEWS','left','1n','clasifica'],
+  // NOTIFICATIONS
+  ['USERS','bottom','NOTIFICATIONS','top','1n','recibe notif'],
+  // DOCS
+  ['LEGAL_CASES','bottom','CASE_DOCUMENTS','top','nm','adjunta docs'],
+  ['FILE_ATTACHMENTS','right','CASE_DOCUMENTS','left','nm','vincula'],
+  ['LEGAL_CASES','bottom','CASE_EVENTS','top','1n','registra evento'],
+  ['USERS','bottom','CASE_EVENTS','top','1n','ejecuta evento'],
+  ['USERS','bottom','AUDIT_LOGS','top','1n','genera log'],
+];
+
+// ══════════════════════════════════════════════════════════════════════════
+// RENDERING
+// ══════════════════════════════════════════════════════════════════════════
+
+const svg = document.getElementById('mer-svg');
+const eLayer = document.getElementById('entities-layer');
+const rLayer = document.getElementById('relations-layer');
+
+const entityMap = {};
+
+function entityHeight(e) {
+  return HDR_H + e.fields.length * ROW_H + 4;
+}
+
+function drawEntity(e) {
+  const c = COLORS[e.color];
+  const h = entityHeight(e);
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+  // Shadow rect
+  const shadow = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  shadow.setAttribute('x', e.x + 3); shadow.setAttribute('y', e.y + 3);
+  shadow.setAttribute('width', e.w); shadow.setAttribute('height', h);
+  shadow.setAttribute('rx', '8');
+  shadow.setAttribute('fill', 'rgba(0,0,0,0.10)');
+  g.appendChild(shadow);
+
+  // Main border
+  const border = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  border.setAttribute('x', e.x); border.setAttribute('y', e.y);
+  border.setAttribute('width', e.w); border.setAttribute('height', h);
+  border.setAttribute('rx', '8');
+  border.setAttribute('fill', '#fff');
+  border.setAttribute('stroke', c.hdrLight);
+  border.setAttribute('stroke-width', e.bridge ? '2' : '1.5');
+  if (e.bridge) border.setAttribute('stroke-dasharray','5 3');
+  g.appendChild(border);
+
+  // Header
+  const hdr = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  hdr.setAttribute('x', e.x); hdr.setAttribute('y', e.y);
+  hdr.setAttribute('width', e.w); hdr.setAttribute('height', HDR_H);
+  hdr.setAttribute('rx', '8');
+  hdr.setAttribute('fill', c.hdr);
+  g.appendChild(hdr);
+  // Cover header bottom corners
+  const hdrBottom = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  hdrBottom.setAttribute('x', e.x); hdrBottom.setAttribute('y', e.y + HDR_H - 8);
+  hdrBottom.setAttribute('width', e.w); hdrBottom.setAttribute('height', 8);
+  hdrBottom.setAttribute('fill', c.hdr);
+  g.appendChild(hdrBottom);
+
+  // Entity name
+  const nameText = document.createElementNS('http://www.w3.org/2000/svg','text');
+  nameText.setAttribute('x', e.x + e.w / 2);
+  nameText.setAttribute('y', e.y + HDR_H / 2 + 1);
+  nameText.setAttribute('text-anchor', 'middle');
+  nameText.setAttribute('dominant-baseline', 'central');
+  nameText.setAttribute('font-size', '12');
+  nameText.setAttribute('font-weight', '700');
+  nameText.setAttribute('font-family', FONT);
+  nameText.setAttribute('fill', '#FFFFFF');
+  nameText.textContent = e.id;
+  g.appendChild(nameText);
+
+  if (e.bridge) {
+    const tag = document.createElementNS('http://www.w3.org/2000/svg','text');
+    tag.setAttribute('x', e.x + e.w / 2);
+    tag.setAttribute('y', e.y + HDR_H - 8);
+    tag.setAttribute('text-anchor', 'middle');
+    tag.setAttribute('dominant-baseline', 'central');
+    tag.setAttribute('font-size', '9');
+    tag.setAttribute('font-family', FONT);
+    tag.setAttribute('fill', '#FCD34D');
+    tag.textContent = 'TABLA PUENTE (N:M)';
+    g.appendChild(tag);
+  }
+
+  // Fields
+  e.fields.forEach((f, i) => {
+    const fy = e.y + HDR_H + i * ROW_H;
+    const rowBg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    let fill = i % 2 === 0 ? c.row1 : c.row2;
+    if (f.pk) fill = '#FEF9C3';
+    if (f.fk) fill = '#FFF3E0';
+    rowBg.setAttribute('x', e.x + 1); rowBg.setAttribute('y', fy);
+    rowBg.setAttribute('width', e.w - 2); rowBg.setAttribute('height', ROW_H);
+    rowBg.setAttribute('fill', fill);
+    g.appendChild(rowBg);
+
+    // PK/FK badge
+    if (f.pk || f.fk) {
+      const badge = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      badge.setAttribute('x', e.x + 4);
+      badge.setAttribute('y', fy + 4);
+      badge.setAttribute('width', f.pk ? 22 : 20);
+      badge.setAttribute('height', 14);
+      badge.setAttribute('rx', '3');
+      badge.setAttribute('fill', f.pk ? '#F59E0B' : '#FB923C');
+      g.appendChild(badge);
+
+      const badgeText = document.createElementNS('http://www.w3.org/2000/svg','text');
+      badgeText.setAttribute('x', e.x + (f.pk ? 15 : 14));
+      badgeText.setAttribute('y', fy + 11);
+      badgeText.setAttribute('text-anchor', 'middle');
+      badgeText.setAttribute('dominant-baseline', 'central');
+      badgeText.setAttribute('font-size', '8');
+      badgeText.setAttribute('font-weight', '700');
+      badgeText.setAttribute('font-family', FONT);
+      badgeText.setAttribute('fill', '#fff');
+      badgeText.textContent = f.pk ? 'PK' : 'FK';
+      g.appendChild(badgeText);
+    }
+
+    // Field name
+    const nameEl = document.createElementNS('http://www.w3.org/2000/svg','text');
+    nameEl.setAttribute('x', e.x + (f.pk || f.fk ? 32 : 8));
+    nameEl.setAttribute('y', fy + ROW_H / 2);
+    nameEl.setAttribute('dominant-baseline', 'central');
+    nameEl.setAttribute('font-size', '10');
+    nameEl.setAttribute('font-family', FONT);
+    nameEl.setAttribute('font-weight', f.pk ? '700' : '400');
+    nameEl.setAttribute('fill', f.pk ? '#92400E' : (f.fk ? '#7C2D12' : '#1a202c'));
+    nameEl.textContent = f.name;
+    g.appendChild(nameEl);
+
+    // Field type (right-aligned)
+    const typeEl = document.createElementNS('http://www.w3.org/2000/svg','text');
+    typeEl.setAttribute('x', e.x + e.w - 6);
+    typeEl.setAttribute('y', fy + ROW_H / 2);
+    typeEl.setAttribute('dominant-baseline', 'central');
+    typeEl.setAttribute('text-anchor', 'end');
+    typeEl.setAttribute('font-size', '9');
+    typeEl.setAttribute('font-family', FONT);
+    typeEl.setAttribute('fill', '#6B7280');
+    typeEl.setAttribute('font-style', 'italic');
+    typeEl.textContent = f.type;
+    g.appendChild(typeEl);
+
+    // Separator line
+    if (i < e.fields.length - 1) {
+      const sep = document.createElementNS('http://www.w3.org/2000/svg','line');
+      sep.setAttribute('x1', e.x + 1); sep.setAttribute('y1', fy + ROW_H);
+      sep.setAttribute('x2', e.x + e.w - 1); sep.setAttribute('y2', fy + ROW_H);
+      sep.setAttribute('stroke', '#E5E7EB'); sep.setAttribute('stroke-width', '0.5');
+      g.appendChild(sep);
+    }
+  });
+
+  // Bottom rounded corners fill
+  const bottomFill = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  bottomFill.setAttribute('x', e.x + 1);
+  bottomFill.setAttribute('y', e.y + h - 8);
+  bottomFill.setAttribute('width', e.w - 2);
+  bottomFill.setAttribute('height', 8);
+  bottomFill.setAttribute('fill', e.fields.length % 2 === 0 ? c.row1 : c.row2);
+  g.appendChild(bottomFill);
+
+  eLayer.appendChild(g);
+
+  // Store bounding box
+  entityMap[e.id] = { x: e.x, y: e.y, w: e.w, h };
+}
+
+function getConnectorPoint(id, side) {
+  const b = entityMap[id];
+  if (!b) return null;
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  switch(side) {
+    case 'top':    return { x: cx,        y: b.y };
+    case 'bottom': return { x: cx,        y: b.y + b.h };
+    case 'left':   return { x: b.x,       y: cy };
+    case 'right':  return { x: b.x + b.w, y: cy };
+  }
+  return { x: cx, y: cy };
+}
+
+function drawRelation(rel) {
+  const [fromId, fromSide, toId, toSide, type, label] = rel;
+  const p1 = getConnectorPoint(fromId, fromSide);
+  const p2 = getConnectorPoint(toId, toSide);
+  if (!p1 || !p2) return;
+
+  const isNM = type === 'nm';
+  const color = isNM ? '#D97706' : '#94A3B8';
+  const strokeW = isNM ? '2' : '1.2';
+  const dash = isNM ? '7 4' : '';
+
+  // Compute path with L-bend to avoid crossing
+  let d;
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+
+  if ((fromSide === 'bottom' && toSide === 'top') ||
+      (fromSide === 'top' && toSide === 'bottom')) {
+    const my = (p1.y + p2.y) / 2;
+    d = `M ${p1.x} ${p1.y} C ${p1.x} ${my} ${p2.x} ${my} ${p2.x} ${p2.y}`;
+  } else if ((fromSide === 'right' && toSide === 'left') ||
+             (fromSide === 'left' && toSide === 'right')) {
+    const mx = (p1.x + p2.x) / 2;
+    d = `M ${p1.x} ${p1.y} C ${mx} ${p1.y} ${mx} ${p2.y} ${p2.x} ${p2.y}`;
+  } else {
+    // Mixed sides — use elbow
+    if (fromSide === 'bottom' || fromSide === 'top') {
+      d = `M ${p1.x} ${p1.y} L ${p1.x} ${p2.y} L ${p2.x} ${p2.y}`;
+    } else {
+      d = `M ${p1.x} ${p1.y} L ${p2.x} ${p1.y} L ${p2.x} ${p2.y}`;
+    }
+  }
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d', d);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', color);
+  path.setAttribute('stroke-width', strokeW);
+  if (dash) path.setAttribute('stroke-dasharray', dash);
+  path.setAttribute('marker-end', `url(#${isNM ? 'arr-nm' : 'arr'})`);
+  path.setAttribute('opacity', '0.7');
+  rLayer.appendChild(path);
+
+  // Cardinality label at midpoint
+  const mx = (p1.x + p2.x) / 2;
+  const my = (p1.y + p2.y) / 2;
+  const cardText = type === 'nm' ? 'N:M' : '1:N';
+
+  const pill = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  pill.setAttribute('x', mx - 14); pill.setAttribute('y', my - 8);
+  pill.setAttribute('width', 28); pill.setAttribute('height', 16);
+  pill.setAttribute('rx', '8');
+  pill.setAttribute('fill', isNM ? '#FEF3C7' : '#F0F4FF');
+  pill.setAttribute('stroke', color);
+  pill.setAttribute('stroke-width', '0.8');
+  rLayer.appendChild(pill);
+
+  const cardLabel = document.createElementNS('http://www.w3.org/2000/svg','text');
+  cardLabel.setAttribute('x', mx);
+  cardLabel.setAttribute('y', my + 1);
+  cardLabel.setAttribute('text-anchor', 'middle');
+  cardLabel.setAttribute('dominant-baseline', 'central');
+  cardLabel.setAttribute('font-size', '8');
+  cardLabel.setAttribute('font-weight', '700');
+  cardLabel.setAttribute('font-family', FONT);
+  cardLabel.setAttribute('fill', isNM ? '#92400E' : '#3730A3');
+  cardLabel.textContent = cardText;
+  rLayer.appendChild(cardLabel);
+}
+
+// Draw all entities first
+entities.forEach(drawEntity);
+// Then draw relations on top
+relations.forEach(drawRelation);
+
+// Adjust SVG size to fit all content
+let maxX = 0, maxY = 0;
+entities.forEach(e => {
+  maxX = Math.max(maxX, e.x + e.w);
+  maxY = Math.max(maxY, e.y + entityHeight(e));
+});
+svg.setAttribute('width', maxX + 60);
+svg.setAttribute('height', maxY + 60);
+svg.style.minWidth = (maxX + 60) + 'px';
+
+// ── ZOOM ──────────────────────────────────────────────────────────────────
+let scale = 1;
+const wrap = document.getElementById('canvasWrap');
+
+function zoom(delta) {
+  scale = Math.max(0.25, Math.min(3, scale + delta));
+  svg.style.transform = `scale(${scale})`;
+  svg.style.transformOrigin = 'top left';
+}
+function resetZoom() {
+  scale = 1;
+  svg.style.transform = '';
+}
+</script>
+</body>
+</html>
